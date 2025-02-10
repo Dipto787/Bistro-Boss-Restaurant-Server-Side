@@ -21,17 +21,55 @@ async function run() {
     try {
         let menuItemsDB = client.db('Bistro-Boss-DB').collection('menu');
         let cartItemsDB = client.db('Bistro-Boss-DB').collection('carts');
+        let userDb = client.db('Bistro-Boss-DB').collection('users');
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
+        app.get('/user', async (req, res) => {
+            let result = await userDb.find().toArray();
+            res.send(result);
+        })
+        app.delete('/user/:id', async (req, res) => {
+            let id = req.params.id;
+            let query = { _id: new ObjectId(id) };
+            let result = await userDb.deleteOne(query);
+            res.send(result);
+
+        })
+
+        app.patch('/user/admin/:id', async (req, res) => {
+            let id = req.params.id;
+            let filter = { _id: new ObjectId(id) };
+            let updateDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            }
+
+            let result = await userDb.updateOne(filter, updateDoc);
+            res.send(result);
+
+        })
+
+
         app.post('/cart', async (req, res) => {
             let data = req.body;
             let result = await cartItemsDB.insertOne(data);
             res.send(result);
         })
+        app.post('/user', async (req, res) => {
+            let users = req.body;
+            let query = { email: users.email };
+            let existingUser = await userDb.findOne(query);
+            if (existingUser) {
+                return res.send({ message: 'existing user' });
+            }
+            let result = await userDb.insertOne(users);
+            res.send(result);
+        })
         app.delete('/cart/:id', async (req, res) => {
             let id = req.params.id;
             let query = { _id: new ObjectId(id) };
-            let result=await cartItemsDB.deleteOne(query);
+            let result = await cartItemsDB.deleteOne(query);
             res.send(result);
         })
         app.get('/cart', async (req, res) => {
