@@ -124,6 +124,11 @@ async function run() {
             let result = await cartItemsDB.find(query).toArray();
             res.send(result);
         })
+        app.post('/menu', verifyToken, verifyAdmin, async (req, res) => {
+            let items = req.body;
+            let result = await menuItemsDB.insertOne(items);
+            res.send(result);
+        })
         app.get('/menu', async (req, res) => {
             let page = parseFloat(req.query.page);
             let size = parseFloat(req.query.size);
