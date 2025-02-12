@@ -55,6 +55,7 @@ async function run() {
             let token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
             res.send({ token });
         })
+
         app.get('/user/admin/:email', verifyToken, async (req, res) => {
             let email = req.params.email;
             if (email !== req.decoded.email) {
@@ -124,11 +125,34 @@ async function run() {
             let result = await cartItemsDB.find(query).toArray();
             res.send(result);
         })
+        app.delete('/menu/:id', async (req, res) => {
+            let id = req.params.id;
+            let query = { _id: id };
+            let result = await menuItemsDB.deleteOne(query);
+            res.send(result);
+        })
         app.post('/menu', verifyToken, verifyAdmin, async (req, res) => {
             let items = req.body;
             let result = await menuItemsDB.insertOne(items);
             res.send(result);
         })
+        app.patch('/menu/:id', async (req, res) => {
+            let body = req.body;
+            let id = req.params.id;
+            let filter = { _id: id };
+            let updateDoc = {
+                $set: {
+                    name: body.name,
+                    price: body.price,
+                    category: body.category,
+                    recipe: body.recipe,
+                    image: body.image
+                }
+            }
+            let result = await menuItemsDB.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
         app.get('/menu', async (req, res) => {
             let page = parseFloat(req.query.page);
             let size = parseFloat(req.query.size);
@@ -139,6 +163,14 @@ async function run() {
             let findData = await menuItemsDB.find(query).skip(page * size).limit(size).toArray();
             res.send(findData);
         })
+        app.get('/menu/:id', async (req, res) => {
+            let id = req.params.id;
+            let query = { _id: id };
+            console.log(id)
+            let result = await menuItemsDB.findOne(query);
+            res.send(result);
+        });
+
 
         app.get('/countFood', async (req, res) => {
             let filter = req.query.filter || 'salad';
